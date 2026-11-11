@@ -1,23 +1,14 @@
 # Roblox Up-and-Coming top-10 forecaster
 
-Entry for make.fun's **roblox-up-and-coming-forecast-01** competition.
+An entry for make.fun's **Predict Roblox's Up-and-Coming top 10** competition.
 
-`main.py` reads the chart's history (`/input/history.ndjson`, `/input/task.json`)
-and writes one forecast to `/output/forecast.json`: for each of the chart's top
-10 places, a probability for every game named at that place, plus a top-10
-guess. It is scored on every hourly read of Roblox's Up-and-Coming chart over
-the 72 hours after entries close.
+`main.py` reads the chart's history (`history.ndjson`) and writes one forecast
+(`forecast.json`): for each of the top 10 places, a probability for every game
+it names at that place, plus its top-10 guess.
 
-Model: persistence with a Laplace rank spread, shifted by each game's player
-growth and rank momentum over a 16-hour lookback, with 15% of every place left
-to the games the forecast does not name there. Python 3.13, standard library
-only, deterministic.
+The model is persistence with a spread: a game's expected place is its current
+place, shifted up by its player-count growth and rank momentum over the last
+14 hours; around that place it gets an exponentially decaying probability, and
+15% of every place is left to the games the forecast does not name there.
 
-Run locally:
-
-```sh
-mkdir -p out
-MAKEFUN_INPUT_DIR=input MAKEFUN_OUTPUT_DIR=out python3 main.py
-```
-
-Licence: MIT.
+Python 3 standard library only, deterministic, no network.
