@@ -30,8 +30,10 @@ OUTPUT_DIR = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
 LOOKBACK_HOURS = 16.0   # window over which player growth and rank momentum are measured
 TOP_N = 15              # games named by current place
 GROWTH_TOP = 10         # games named by recent player growth
-SPREAD = 2.5            # exponential decay scale, in places
-UNNAMED = 0.15          # share of each place left to the games not named there
+SPREAD = 2.0            # decay scale of the sharp component, in places
+SPREAD_TAIL = 14.0      # decay scale of the insurance component, in places
+SHARP = 0.90            # weight of the sharp component; the 10% tail covers horizon drift
+UNNAMED = 0.16          # share of each place left to the games not named there
 BOOST = 400.0           # places pulled up per unit of log player growth per hour
 GROWTH_THRESHOLD = 0.05 # growth per hour below which a game is not boosted
 MOMENTUM = 0.0          # places pulled up per rank gained per hour
@@ -111,7 +113,9 @@ def build_forecast(reads, places):
             boost = min(BOOST_CAP, BOOST * max(0.0, growth - GROWTH_THRESHOLD))
             pull = boost + MOMENTUM * max(-MOMENTUM_CLIP, min(MOMENTUM_CLIP, momentum)) * 8.0
             expected = current - pull
-            weights[uid] = math.exp(-abs(expected - place) / SPREAD)
+            distance = abs(expected - place)
+            weights[uid] = (SHARP * math.exp(-distance / SPREAD)
+                            + (1.0 - SHARP) * math.exp(-distance / SPREAD_TAIL))
         total = sum(weights.values())
         if total <= 0:
             continue
